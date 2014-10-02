@@ -106,6 +106,20 @@ class CephFSMount(object):
         args = ["cd", self.mountpoint, run.Raw('&&')] + args
         return self.client_remote.run(args=args)
 
+    def open_no_data(self, basename):
+        """
+        A pure metadata operation
+        """
+        assert(self.is_mounted())
+
+        path = os.path.join(self.mountpoint, basename)
+
+        self._run_python(dedent(
+            """
+            f = open("{path}", 'w')
+            """.format(path=path)
+        ))
+
     def open_background(self, basename="background_file"):
         """
         Open a file for writing, then block such that the client
@@ -227,6 +241,18 @@ class CephFSMount(object):
         rproc = self._run_python(pyscript)
         self.background_procs.append(rproc)
         return rproc
+
+    def write_n_mb(self, filename, n_mb, seek=0):
+        """
+        Write the requested number of megabytes to a file
+        """
+        assert(self.is_mounted())
+
+        self.run_shell(["dd", "if=/dev/urandom", "of={0}".format(filename),
+                        "bs=1M",
+                        "count={0}".format(n_mb),
+                        "seek={0}".format(seek)
+        ])
 
     def open_n_background(self, fs_path, count):
         """
