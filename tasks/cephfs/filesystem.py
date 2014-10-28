@@ -201,6 +201,10 @@ class Filesystem(object):
         return version
 
     def mds_asok(self, command, mds_id=None):
+        """
+        :param mds_id: Optional MDS ID (the 'a' in 'mds.a')
+        :param command: List of strings
+        """
         if mds_id is None:
             mds_id = self.get_lone_mds_id()
         proc = self.mon_manager.admin_socket('mds', mds_id, command)
