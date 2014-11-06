@@ -48,7 +48,7 @@ def task(ctx, config):
     log.info("Initiating mds_scrub_checks on mds.{id_}, test_path {path}, run_seq {seq}".format(
             id_=mds_id, path=test_path, seq=run_seq))
 
-    def json_validater(json,rc,element,expected_value):
+    def json_validator(json,rc,element,expected_value):
         if (rc != 0):
             return False, "asok command returned error {rc}".format(rc=str(rc))
         element_value = json.get(element)
@@ -59,10 +59,10 @@ def task(ctx, config):
 
     nep = "{test_path}/i/dont/exist".format(test_path=test_path)
     command = "flush_path {nep}".format(nep=nep)
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",-2))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",-2))
     
     command = "scrub_path {nep}".format(nep=nep)
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",-2))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",-2))
 
     test_repo_path = "{test_path}/ceph-qa-suite".format(test_path=test_path)
     dirpath = "{repo_path}/suites".format(repo_path=test_repo_path)
@@ -70,30 +70,30 @@ def task(ctx, config):
     if (run_seq == 0):
         log.info("First run: flushing {dirpath}".format(dirpath=dirpath))
         command = "flush_path {dirpath}".format(dirpath=dirpath)
-        asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+        asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
     command = "scrub_path {dirpath}".format(dirpath=dirpath)
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
     
     filepath = "{repo_path}/suites/fs/verify/validater/valgrind.yaml".format(
         repo_path=test_repo_path)
     if (run_seq == 0):
         log.info("First run: flushing {filepath}".format(filepath=filepath))
         command = "flush_path {filepath}".format(filepath=filepath)
-        asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+        asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
     command = "scrub_path {filepath}".format(filepath=filepath)
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
 
     filepath = "{repo_path}/suites/fs/basic/clusters/fixed-3-cephfs.yaml".format(
         repo_path=test_repo_path)
     command = "scrub_path {filepath}".format(filepath=filepath)
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"performed_validation",False))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"performed_validation",False))
     
     if (run_seq == 0):
         log.info("First run: flushing base dir /")
         command = "flush_path /"
-        asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+        asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
     command = "scrub_path /"
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
 
     client = ctx.manager.find_remote("client", client_id)
     new_dir = "{repo_path}/new_dir_{i}".format(repo_path=repo_path,i=run_seq)
@@ -101,17 +101,17 @@ def task(ctx, config):
     client.run(args=[
             "mkdir", new_dir])
     command = "flush_path {dir}".format(dir=test_new_dir)
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
 
     new_file = "{repo_path}/new_file_{i}".format(repo_path=repo_path,i=run_seq)
     test_new_file = "{repo_path}/new_file_{i}".format(repo_path=test_repo_path,i=run_seq)
     client.run(args=[
             "echo", "hello", run.Raw('>'), new_file])
     command = "flush_path {file}".format(file=test_new_file)
-    asok_command(ctx, mds_id, command, lambda j,r:json_validater(j,r,"return_code",0))
+    asok_command(ctx, mds_id, command, lambda j,r:json_validator(j,r,"return_code",0))
 
     command = "flush_path /"
-    asok_command(ctx, mds_id, command, lambda j,r: json_validater(j,r,"return_code",0))
+    asok_command(ctx, mds_id, command, lambda j,r: json_validator(j,r,"return_code",0))
     
 class AsokCommandFailedError(Exception):
     """
@@ -128,7 +128,7 @@ class AsokCommandFailedError(Exception):
             command=self.command,rc=self.rc,json=self.json,es=self.errstring)
         
 
-def asok_command(ctx, mds_id, command, validater):
+def asok_command(ctx, mds_id, command, validator):
     log.info("Running command '{command}'".format(command=command))
     
     command_list = command.split()
@@ -145,7 +145,7 @@ def asok_command(ctx, mds_id, command, validater):
     log.info("command '{command}' got response code '{rout}' and stdout '{sout}'".format(
             command=command,rout=rout,sout=sout))
 
-    success,errstring = validater(jout,rout)
+    success,errstring = validator(jout,rout)
 
     if not success:
         raise AsokCommandFailedError(command, rout, jout, errstring)
