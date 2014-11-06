@@ -167,7 +167,8 @@ def clone_repo(ctx, client_id, path):
     client.run(
         args=[
             "ls", repo_path, run.Raw('||'),
-            "git", "clone", "http://github.com/ceph/{repo}".format(repo=repo),
+            "git", "clone", '--branch', 'giant',
+            "http://github.com/ceph/{repo}".format(repo=repo),
             "{path}/{repo}".format(path=path,repo=repo)
             ]
         )
