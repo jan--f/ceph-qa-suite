@@ -1,6 +1,7 @@
 """
 MDS admin socket scrubbing-related tests.
 """
+from cStringIO import StringIO
 import json
 import logging
 
@@ -122,6 +123,36 @@ def task(ctx, config):
         "echo", "hello", run.Raw('>'), new_file])
     command = "flush_path {file}".format(file=test_new_file)
     asok_command(ctx, mds_id, command, success_validator)
+
+    # check that scrub fails on errors. First, get ino
+    client = ctx.manager.find_remote("client", 0)
+    proc = client.run(
+        args=[
+            "ls", "-li", new_file, run.Raw('|'),
+            "grep", "-o", run.Raw('"^[0-9]*"')
+        ],
+        wait=False,
+        stdout=StringIO()
+    )
+    proc.wait()
+    ino = int(proc.stdout.getvalue().strip())
+    rados_obj_name = "{ino}.00000000".format(ino=hex(ino).split('x')[1])
+    client.run(
+        args=[
+            "rados", "-p", "data", "rmxattr",
+            rados_obj_name, "parent"
+        ]
+    )
+    command = "scrub_path {file}".format(file=test_new_file)
+    asok_command(ctx, mds_id, command,
+                 lambda j, r: json_validator(j, r, "return_code", -61))
+    client.run(
+        args=[
+            "rados", "-p", "data", "rm", rados_obj_name
+        ]
+    )
+    asok_command(ctx, mds_id, command,
+                 lambda j, r: json_validator(j, r, "return_code", -2))
 
     command = "flush_path /"
     asok_command(ctx, mds_id, command, success_validator)
