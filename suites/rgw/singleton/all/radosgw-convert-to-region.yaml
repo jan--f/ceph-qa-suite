@@ -39,6 +39,7 @@ tasks:
         secret key: Oy4IOauQoL18Gp2zM7lC1vLmoawgqcYPbYGcWfXv
 - s3readwrite:
     client.0:
+      force-branch: firefly-original
       extra_args: ['--no-cleanup']
       s3:
         delete_user: False
@@ -59,6 +60,7 @@ tasks:
         secret key: Py4IOauQoL18Gp2zM7lC1vLmoawgqcYPbYGcWfXw
 - s3readwrite:
     client.1:
+      force-branch: firefly-original
       s3:
         create_user: False
       readwrite:

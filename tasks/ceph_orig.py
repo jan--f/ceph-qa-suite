@@ -803,7 +803,7 @@ def cluster(ctx, config):
                     'rm',
                     '-rf',
                     '--',
-                    conf_path.rsplit('/', 1)[0],
+                    conf_path,
                     keyring_path,
                     '{tdir}/data'.format(tdir=testdir),
                     '{tdir}/monmap'.format(tdir=testdir),

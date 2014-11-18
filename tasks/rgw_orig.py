@@ -12,6 +12,7 @@ from cStringIO import StringIO
 from teuthology.orchestra import run
 from teuthology import misc as teuthology
 from teuthology import contextutil
+from teuthology.orchestra.run import CommandFailedError
 from util.rgw import rgwadmin
 from util.rados import (rados, create_ec_pool,
                                         create_replicated_pool,
@@ -87,13 +88,15 @@ def ship_apache_configs(ctx, config, role_endpoints):
         if not conf:
             conf = {}
         idle_timeout = conf.get('idle_timeout', ctx.rgw.default_idle_timeout)
-        if ('rpm' == system_type):
-            log.info('detected SUSE Apache....')
-            mod_path = '/usr/lib64/apache2'
-            print_continue = 'off'
-            user = 'wwwrun'
-            group = 'www'
-            apache24_modconfig = ''
+        if system_type == 'deb':
+            mod_path = '/usr/lib/apache2/modules'
+            print_continue = 'on'
+            user = 'www-data'
+            group = 'www-data'
+            apache24_modconfig = '''
+  IncludeOptional /etc/apache2/mods-available/mpm_event.conf
+  IncludeOptional /etc/apache2/mods-available/mpm_event.load
+'''
         else:
             mod_path = '/usr/lib64/httpd/modules'
             print_continue = 'off'
@@ -266,10 +269,20 @@ def start_apache(ctx, config):
     for client in config.iterkeys():
         (remote,) = ctx.cluster.only(client).remotes.keys()
         system_type = teuthology.get_system_type(remote)
-        if ('rpm' == system_type):
-            apache_name = '/usr/sbin/apache2ctl'
+        if system_type == 'deb':
+            apache_name = 'apache2'
         else:
-            apache_name = '/usr/sbin/httpd'
+            try:
+                remote.run(
+                    args=[
+                        'stat',
+                        '/usr/sbin/httpd.worker',
+                    ],
+                )
+                apache_name = '/usr/sbin/httpd.worker'
+            except CommandFailedError:
+                apache_name = '/usr/sbin/httpd'
+
         proc = remote.run(
             args=[
                 'adjust-ulimits',
@@ -291,14 +304,10 @@ def start_apache(ctx, config):
         yield
     finally:
         log.info('Stopping apache...')
-        #for client, proc in apaches.iteritems():
-            #proc.stdin.close()
-        
-        #run.wait(apaches.itervalues())
-        r = remote.run(
-        args=['killall', '-9', 'httpd2'],
-        stdout=StringIO(),
-        )
+        for client, proc in apaches.iteritems():
+            proc.stdin.close()
+
+        run.wait(apaches.itervalues())
 
 
 def extract_user_info(client_config):
@@ -723,10 +732,6 @@ def task(ctx, config):
         - rgw:
             default_idle_timeout: 30
             ec-data-pool: true
-            erasure_code_profile:
-              k: 2
-              m: 1
-              ruleset-failure-domain: osd
             regions:
               foo:
                 api name: api_name # default: region name
@@ -783,10 +788,6 @@ def task(ctx, config):
     if 'ec-data-pool' in config:
         ctx.rgw.ec_data_pool = bool(config['ec-data-pool'])
         del config['ec-data-pool']
-    ctx.rgw.erasure_code_profile = {}
-    if 'erasure_code_profile' in config:
-        ctx.rgw.erasure_code_profile = config['erasure_code_profile']
-        del config['erasure_code_profile']
     ctx.rgw.default_idle_timeout = 30
     if 'default_idle_timeout' in config:
         ctx.rgw.default_idle_timeout = int(config['default_idle_timeout'])

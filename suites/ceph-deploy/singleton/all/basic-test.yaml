@@ -21,7 +21,7 @@ roles:
   - osd.6
   - osd.7
   - osd.8
-- - client.0
+  - client.0
 
 tasks:
 - install:

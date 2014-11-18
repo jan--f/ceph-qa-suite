@@ -768,7 +768,7 @@ def task(ctx, config):
             check_status=True)
 
     # TODO: show log by bucket+date
-
+    log.info('STARTING THE TEST AT 780')
     # need to wait for all usage data to get flushed, should take up to 30 seconds
     timestamp = time.time()
     while time.time() - timestamp <= (20 * 60):      # wait up to 20 minutes
