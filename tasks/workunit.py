@@ -8,6 +8,7 @@ import os
 from teuthology import misc as teuthology
 from teuthology.parallel import parallel
 from teuthology.orchestra import run
+from teuthology.config import config as teuth_config
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ def task(ctx, config):
     if refspec is None:
         refspec = config.get('tag')
     if refspec is None:
-        refspec = 'HEAD'
+        refspec = 'master'
 
     timeout = config.get('timeout', '3h')
 
@@ -287,21 +288,27 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
     else:
         scratch_tmp = os.path.join(mnt, subdir)
     srcdir = '{tdir}/workunit.{role}'.format(tdir=testdir, role=role)
+     
+    remote.run(
+        logger=log.getChild(role),
+        args=[
+            'wget', '-O', '/tmp/%s.tar.gz' % refspec,
+            teuth_config.ceph_git_base_url+'ceph/archive/%s.tar.gz' % refspec,
+            ],
+        )
+
 
     remote.run(
         logger=log.getChild(role),
         args=[
             'mkdir', '--', srcdir,
             run.Raw('&&'),
-            'git',
-            'archive',
-            '--remote=git://ceph.newdream.net/git/ceph.git',
-            '%s:qa/workunits' % refspec,
-            run.Raw('|'),
             'tar',
+            '--strip-components=3',
             '-C', srcdir,
-            '-x',
-            '-f-',
+            '-xvf',
+            '/tmp/%s.tar.gz' % refspec,
+            'ceph-%s/qa/workunits' % refspec,
             run.Raw('&&'),
             'cd', '--', srcdir,
             run.Raw('&&'),
@@ -311,6 +318,16 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
             run.Raw('>{tdir}/workunits.list'.format(tdir=testdir)),
             ],
         )
+
+    
+    remote.run(
+        logger=log.getChild(role),
+        args=[
+            'rm', '/tmp/%s.tar.gz' % refspec,
+            ],
+        )
+
+
 
     workunits = sorted(teuthology.get_file(
                             remote,
