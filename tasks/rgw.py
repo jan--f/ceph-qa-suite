@@ -267,7 +267,7 @@ def start_apache(ctx, config):
         (remote,) = ctx.cluster.only(client).remotes.keys()
         system_type = teuthology.get_system_type(remote)
         if ('rpm' == system_type):
-            apache_name = '/usr/sbin/apache2ctl'
+            apache_name = '/usr/sbin/httpd2-prefork'
         else:
             apache_name = '/usr/sbin/httpd'
         proc = remote.run(
@@ -291,14 +291,14 @@ def start_apache(ctx, config):
         yield
     finally:
         log.info('Stopping apache...')
-        #for client, proc in apaches.iteritems():
-            #proc.stdin.close()
+        for client, proc in apaches.iteritems():
+            proc.stdin.close()
         
-        #run.wait(apaches.itervalues())
-        r = remote.run(
-        args=['killall', '-9', 'httpd2'],
-        stdout=StringIO(),
-        )
+        run.wait(apaches.itervalues())
+        #r = remote.run(
+        #args=['killall', '-9', 'httpd2'],
+        #stdout=StringIO(),
+        #)
 
 
 def extract_user_info(client_config):
