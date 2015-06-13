@@ -291,7 +291,7 @@ def run_qemu(ctx, config):
         )
         qemu_cmd = 'qemu-system-x86_64'
         if remote.os.package_type == "rpm":
-            qemu_cmd = "/usr/libexec/qemu-kvm"
+            qemu_cmd = "/usr/bin/qemu-kvm"
         args=[
             'adjust-ulimits',
             'ceph-coverage',
