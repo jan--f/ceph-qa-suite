@@ -287,7 +287,7 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
     else:
         scratch_tmp = os.path.join(mnt, subdir)
     srcdir = '{tdir}/workunit.{role}'.format(tdir=testdir, role=role)
-
+    '''
     remote.run(
         logger=log.getChild(role),
         args=[
@@ -311,6 +311,54 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
             run.Raw('>{tdir}/workunits.list.{role}'.format(tdir=testdir, role=role)),
         ],
     )
+    '''
+    #######instead of newdream fetch workunits from github/SUSE####################
+    for i in range(5):
+        try:
+            remote.run(
+                logger=log.getChild(role),
+                args=[
+                    'wget', '-O', '/tmp/%s.tar.gz' % refspec,
+                    teuth_config.ceph_git_base_url+'ceph/archive/%s.tar.gz' % refspec,
+                    ],
+                )
+            break
+        except:
+            time.sleep(2)
+            if i == 4:
+                raise Exception("Could not wget github repo")
+
+
+    remote.run(
+        logger=log.getChild(role),
+        args=[
+            'mkdir', '--', srcdir,
+            run.Raw('&&'),
+            'tar',
+            '--strip-components=3',
+            '-C', srcdir,
+            '-xvf',
+            '/tmp/%s.tar.gz' % refspec,
+            'ceph-%s/qa/workunits' % refspec,
+            run.Raw('&&'),
+            'cd', '--', srcdir,
+            run.Raw('&&'),
+            'if', 'test', '-e', 'Makefile', run.Raw(';'), 'then', 'make', run.Raw(';'), 'fi',
+            run.Raw('&&'),
+            'find', '-executable', '-type', 'f', '-printf', r'%P\0'.format(srcdir=srcdir),
+            run.Raw('>{tdir}/workunits.list'.format(tdir=testdir)),
+            ],
+        )
+
+    remote.run(
+        logger=log.getChild(role),
+        args=[
+            'rm', '/tmp/%s.tar.gz' % refspec,
+            ],
+        )
+   
+    ###############################################################################
+
 
     workunits = sorted(misc.get_file(
         remote,
