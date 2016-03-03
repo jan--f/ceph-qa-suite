@@ -329,6 +329,8 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
             if i == 4:
                 raise Exception("Could not wget github repo")
 
+    if refspec[0] is 'v':
+        refspec_temp = refspec[1:]
 
     remote.run(
         logger=log.getChild(role),
@@ -340,7 +342,7 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
             '-C', srcdir,
             '-xvf',
             '/tmp/%s.tar.gz' % refspec,
-            'ceph-%s/qa/workunits' % refspec,
+            'ceph-%s/qa/workunits' % refspec_temp,
             run.Raw('&&'),
             'cd', '--', srcdir,
             run.Raw('&&'),
