@@ -9,6 +9,7 @@ from teuthology import misc
 from teuthology.orchestra.run import CommandFailedError
 from teuthology.parallel import parallel
 from teuthology.orchestra import run
+from teuthology.config import config as teuth_config
 
 log = logging.getLogger(__name__)
 
