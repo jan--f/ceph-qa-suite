@@ -362,11 +362,16 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
    
     ###############################################################################
 
+    import pdb
+    pdb.set_trace()
 
     workunits = sorted(misc.get_file(
         remote,
         '{tdir}/workunits.list.{role}'.format(tdir=testdir, role=role)).split('\0'))
-    assert workunits
+    print '******************************************************************'
+    print workunits
+    print '******************************************************************'
+    #assert workunits
 
     try:
         assert isinstance(tests, list)
