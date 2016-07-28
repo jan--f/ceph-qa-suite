@@ -5,6 +5,7 @@ import contextlib
 import json
 import logging
 import os
+import pprint
 import time
 import tempfile
 
@@ -293,6 +294,7 @@ def test_list_inconsistent_obj(ctx, manager, osd_remote, pg, acting, osd_id,
                            omap_key, omap_val])
     messup = MessUp(manager, osd_remote, pool, osd_id, obj_name, obj_path,
                     omap_key, omap_val)
+    pp = pprint.PrettyPrinter()
     for test in [messup.rm_omap, messup.add_omap, messup.change_omap,
                  messup.append, messup.truncate, messup.change_obj,
                  messup.remove]:
@@ -310,7 +312,8 @@ def test_list_inconsistent_obj(ctx, manager, osd_remote, pg, acting, osd_id,
             with contextlib.closing(StringIO()) as out:
                 mon.run(args=cmd.split(), stdout=out)
                 objs = json.loads(out.getvalue())
-            assert len(objs['inconsistents']) == 1
+	    log.info(pp.pprint(objs))
+            assert len(objs) == 1
 
             checker = InconsistentObjChecker(osd_id, acting, obj_name)
             inc_obj = objs['inconsistents'][0]
