@@ -1,0 +1,17 @@
+roles:
+- - mon.a
+  - osd.0
+  - client.a
+- - mon.b
+  - osd.1
+- - mon.c
+  - osd.2
+openstack:
+  - volumes: # attached to each instance
+      count: 1
+      size: 10 # GB
+tasks:
+- install:
+- exec:
+    client.a:
+      - sleep 1000000000 # forever
