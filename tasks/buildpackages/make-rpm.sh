@@ -106,11 +106,12 @@ function build_package() {
         # these transformations change version info to only include
         # version number as is required by the ceph.spec file
         #
-        cat make-dist \
+#        cat make-dist \
 #          | sed -e '0,/^outfile=/s//ver=`echo $version | cut -d - -f 1-1`\n&/' \
 #          | sed -e 's/^\(outfile="ceph-$ver\)sion"/\1"/g' \
 #                -e 's/\(--prefix ceph-$ver\)sion/\1/g' \
-          | sh
+#          | sh
+        ./make-dist
     fi
     # Set up build area
     setup_rpmmacros
