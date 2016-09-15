@@ -35,8 +35,6 @@ ceph:
   - ceph-test
   - ceph
   - ceph-fuse
-  - cephfs-java
-  - libcephfs_jni1
   - libcephfs1
   - librados2
   - librbd1
