@@ -132,6 +132,7 @@ function build_package() {
                  -e '/^Epoch:/d' \
                  -e 's/%bcond_with ceph_test_package/%bcond_without ceph_test_package/' \
                  -e "s/^Source0:.*$/Source0: $CEPH_TARBALL/" \
+                 -e '/^Source9/d' \
                  ceph.spec
         fi
         buildarea=`readlink -fn ${releasedir}`   ### rpm wants absolute path
