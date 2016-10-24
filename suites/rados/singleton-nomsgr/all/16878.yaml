@@ -30,4 +30,4 @@ tasks:
 - workunit:
     clients:
       all:
-        - 16878.sh
+        - rados/16878.sh
