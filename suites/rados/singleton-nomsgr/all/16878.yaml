@@ -1,5 +1,7 @@
 roles:
 - [mon.a, client.0]
+- [mon.b]
+- [mon.c]
 openstack:
   - machine:
       disk: 20 # GB
