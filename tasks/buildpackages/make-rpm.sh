@@ -32,6 +32,7 @@ arch=$6
 
 suse=false
 [[ $codename =~ suse ]] && suse=true
+[[ $codename =~ sle ]] && suse=true
 
 # lsb-release is required by install-deps.sh 
 if [ "$suse" = true ] ; then
