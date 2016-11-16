@@ -34,11 +34,10 @@ suse=false
 [[ $codename =~ suse ]] && suse=true
 [[ $codename =~ sle ]] && suse=true
 
-# lsb-release is required by install-deps.sh 
 if [ "$suse" = true ] ; then
-    sudo zypper -n install --no-recommends git lsb-release
+    sudo zypper -n install --no-recommends git
 else
-    sudo yum install -y git redhat-lsb-core
+    sudo yum install -y git
 fi
 
 source $(dirname $0)/common.sh
@@ -83,18 +82,20 @@ function build_package() {
     # included in the distribution.
     #
     git clean -qdxff
-    #
-    # creating the distribution tarbal requires some configure
-    # options (otherwise parts of the source tree will be left out).
-    #
-    if [ "$suse" = true ] ; then
-        sudo zypper -n install bzip2
-    else
-        sudo yum install -y bzip2
-    fi
     # autotools only works in jewel and below
     if [[ ! -e "make-dist" ]] ; then
+        # lsb-release is required by install-deps.sh 
+        # which is required by autogen.sh
+        if [ "$suse" = true ] ; then
+            sudo zypper -n install bzip2 lsb-release which
+        else
+            sudo yum install -y bzip2 redhat-lsb-core which
+        fi
         ./autogen.sh
+        #
+        # creating the distribution tarball requires some configure
+        # options (otherwise parts of the source tree will be left out).
+        #
         ./configure $(flavor2configure $flavor) --with-debug --with-radosgw --with-fuse --with-libatomic-ops --with-gtk2 --with-nss
 
         #
