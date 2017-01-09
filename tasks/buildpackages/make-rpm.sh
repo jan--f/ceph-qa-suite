@@ -133,7 +133,7 @@ function build_package() {
                  -e 's/%{epoch}://g' \
                  -e '/^Epoch:/d' \
                  -e 's/%bcond_with ceph_test_package/%bcond_without ceph_test_package/' \
-                 -e '/BuildRequires: \+libxio-devel/d' \
+                 -e 's/%bcond_with xio/%bcond_without xio/g' \
                  -e "s/^Source0:.*$/Source0: $CEPH_TARBALL/" \
                  -e '/^Source9/d' \
                  ceph.spec

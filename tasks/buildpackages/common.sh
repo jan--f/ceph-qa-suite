@@ -24,6 +24,7 @@ function install_deps() {
     if grep --quiet 14.04 /etc/issue 2>/dev/null && sudo apt-get install --force-yes -qq -y dpkg-dev && test "$(dpkg-architecture -qDEB_BUILD_GNU_CPU 2>/dev/null)" = aarch64 ; then
         sed -i -e '/libgoogle-perftools-dev/d' debian/control
     fi
+    sed -i -e '/BuildRequires: \+libxio-devel/d' ceph.spec.in
     bash -x install-deps.sh
 }
 
